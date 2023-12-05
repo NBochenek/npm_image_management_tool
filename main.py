@@ -85,6 +85,8 @@ def main():
 
     folder_path = "photo_upload"
 
+    all_descriptions = set()
+
     #Main Function That Allows User Input
     print("\n\nAhoy! Welcome to the NPM Image Management Tool. This is your Captain speaking.\n"
           "\nThis is a demo version! Please let Nick know about any weird happenings\n"
@@ -99,10 +101,11 @@ def main():
               "5. Upload Photos\n")
         user_selection = input("Make your selection:   ").lower()
         if user_selection == "1":
-            print("I have found the following albums:\n")
+            print(f"I have found {len(albums)} albums:\n")
             for album in albums:
-                print(album.title, album.id)
-                continue
+                print(f"Title: {album.title}, Id: {album.id}")
+            print("\n\n")
+            continue
         if user_selection == "2":
             title = input("Enter the name of the album:     ")
             create_album(token, title)
@@ -114,23 +117,24 @@ def main():
             continue
         if user_selection == "3":
             photos_to_be_changed = []
-            all_descriptions = set()
 
-            # Fetch all media items from the library
-            print("Getting all photo descriptions for the library...")
-            photos, all_descriptions, _ = list_items_in_library(token, all_descriptions)
+            # Fetch all media items from the library only if we haven't done that already
+            if not all_descriptions:
+                print("Getting all photo descriptions for the library...")
+                photos, all_descriptions, _ = list_items_in_library(token, all_descriptions)
 
             print("I have found the following descriptions:\n")
             for desc in all_descriptions:
                 print(desc)
 
             identifier = input(
-                "\nFirst, input the identifer string. This text will be used to identify all of the photos you want changed. Please be specific:     ")
+                "\nFirst, input the description identifer string. This string will be used to identify all of the photos you want changed based on their description."
+                "\nPlease be specific:     ")
 
             # Filter photos based on the identifier in their description
             photos_to_be_changed = [photo["id"] for photo in photos if
-                                  'description' in photo and identifier.lower().strip() in photo[
-                                      'description'].lower().strip()]
+                                  'description' in photo and identifier.strip() in photo[
+                                      'description'].strip()]
 
             #Converts to set to dedupe.
             photos_to_be_changed = set(photos_to_be_changed)
@@ -147,20 +151,32 @@ def main():
             continue
         if user_selection == "4":
             photos_to_be_moved = []
+
+            # Fetch all media items from the library only if we haven't done that already
+            if not all_descriptions:
+                print("Getting all photo descriptions for the library...")
+                photos, all_descriptions, _ = list_items_in_library(token, all_descriptions)
+
+            print("I have found the following descriptions:\n")
+            for desc in all_descriptions:
+                print(desc)
+
             identifier = input(
-                "First, input the identifer string. This text will be used to identify all of the photos you want moved. Please be specific:     ")
+                "\nFirst, input the description identifer string. This string will be used to identify all of the photos you want changed based on their description."
+                "\nPlease be specific:     ")
 
             # Fetch all media items from the library
-            photos, _ = list_items_in_library(token)
+            print("Getting Albums...")
+            photos, all_descriptions, _ = list_items_in_library(token, all_descriptions)
 
             # Filter photos based on the identifier in their description
             photos_to_be_moved = [photo["id"] for photo in photos if
-                                  'description' in photo and identifier.lower().strip() in photo[
-                                      'description'].lower().strip()]
+                                  'description' in photo and identifier.strip() in photo[
+                                      'description'].strip()]
 
             #Converts to set to dedupe.
             photos_to_be_moved = set(photos_to_be_moved)
-            photos_to_be_moved= list(photos_to_be_moved)
+            photos_to_be_moved = list(photos_to_be_moved)
 
             print("Debug photo ID's:", photos_to_be_moved)
             print(f"I have found {len(photos_to_be_moved)} photos that will be moved.\n\n")
@@ -182,8 +198,13 @@ def main():
                              "do not" not in album.title.lower() and album.id != album_selection]
 
             for album in purged_albums:
-                remove_item_from_album(token, photos_to_be_moved, album.id)
-                print(f"Removed photos from {album.title}")
+                response = remove_item_from_album(token, photos_to_be_moved, album.id)
+                if response == 200:
+                    print(f"Removed photos from {album.title}")
+                else:
+                    print(f"Error occurred or {album.title} does not contain target photo.")
+                # Wait to avoid Rate Limit Error
+                time.sleep(2)
 
             print("Moving photos...")
             add_item_to_album(token, photos_to_be_moved, album_selection)

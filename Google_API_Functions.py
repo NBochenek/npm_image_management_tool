@@ -65,7 +65,8 @@ def create_album(token, title):
     else:
         print(f"Error {response.status_code}: {response.text}")
 
-def list_albums(token):
+
+def list_albums(token, page_size=50, page_token=None):
     # Set the URL and headers
     url = "https://photoslibrary.googleapis.com/v1/albums"
     headers = {
@@ -73,14 +74,33 @@ def list_albums(token):
         "Authorization": f"Bearer {token}"
     }
 
+    # Set the query parameters
+    params = {
+        "pageSize": page_size  # Maximum number of albums to return in the call
+    }
+    if page_token:
+        params["pageToken"] = page_token  # Token for the page of results to return
+
     # Make the GET request
-    response = requests.get(url, headers=headers)
+    response = requests.get(url, headers=headers, params=params)
 
     # Check if the request was successful
     if response.status_code == 200:
-        return response.json()
+        response_data = response.json()
+
+        # Optional: You might want to print or process the albums data here
+        albums = response_data.get("albums", [])
+        # print(f"Retrieved {len(albums)} albums in this batch.")
+
+        # Prepare for the next batch of albums if there's a 'nextPageToken'
+        if 'nextPageToken' in response_data:
+            next_page_albums = list_albums(token, page_size, response_data['nextPageToken'])
+            albums.extend(next_page_albums)
+
+        return albums
     else:
         print(f"Error {response.status_code}: {response.text}")
+        return None  # or you might want to raise an exception, or handle this case differently
 
 
 def list_items_in_library(token, all_descriptions, page_size=100, page_token=None):
@@ -106,7 +126,7 @@ def list_items_in_library(token, all_descriptions, page_size=100, page_token=Non
         response_data = response.json()
 
         media_items = response_data['mediaItems']
-        print(f"{len(media_items)} media items found in this batch.")
+        # print(f"{len(media_items)} media items found in this batch.")
 
         if media_items:
             #If any items in the batch contains a description, it is added to a set.
@@ -219,10 +239,11 @@ def remove_item_from_album(token, item_ids, album_id):
     # Check if the request was successful
     if response.status_code == 200:
         print(response.json())
+        return response.status_code
     else:
-        print(f"Error {response.status_code}: {response.text}")
-        print("This error may have occurred because the album was empty.")
+        # print(f"Error {response.status_code}: {response.text}")
         # print(f"Debug: {data}")
+        return response.status_code
 
 
 def upload_photo(token, file_path):

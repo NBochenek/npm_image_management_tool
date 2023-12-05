@@ -16,18 +16,19 @@ def album_constructor(album_data):
     objects = []
     count = 1
     try:
-        for result in album_data["albums"]:
+        for result in album_data:
             id = result["id"]
             quid = count
             title = result["title"]
             url = result["productUrl"]
             writeable = bool(result.get("isWriteable", True))
-            coverPhotoUrl = result["coverPhotoBaseUrl"]
+            coverPhotoUrl = result.get("coverPhotoBaseUrl", None)
             album = Album(id, quid, title, url, writeable, coverPhotoUrl)
             objects.append(album)
             count += 1
         return objects
     except KeyError as e:
+        print(f"KeyError: Missing key {e}")
         print("No albums found.")
 
 if __name__ == '__main__':
