@@ -1,7 +1,7 @@
 import os
 import time
 from Google_API_Functions import *
-from models import Album, album_constructor
+from models import Album, album_constructor, sort_albums_by_title
 
 def init_library(token):
     # Gets list of Albums and Media items in library. Creates them into objects for easy reference.
@@ -103,7 +103,7 @@ def main():
         if user_selection == "1":
             print(f"I have found {len(albums)} albums:\n")
             for album in albums:
-                print(f"Title: {album.title}, Id: {album.id}")
+                print(f"Title: {album.title}\n Id: {album.id}\n")
             print("\n\n")
             continue
         if user_selection == "2":
@@ -181,8 +181,8 @@ def main():
             print("Debug photo ID's:", photos_to_be_moved)
             print(f"I have found {len(photos_to_be_moved)} photos that will be moved.\n\n")
 
-            for album in albums:
-                print(str(album.quid) + ". ", album.title)
+            for album in sort_albums_by_title(albums):
+                print(str(album.title + " --- " + str(album.quid)))
             album_selection = input("Select the album number you want to send these photos to:     ")
 
             for album in albums:  # Cycles through albums. If the user selection equals one of the albums, get its ID.

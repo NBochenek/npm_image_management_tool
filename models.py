@@ -31,6 +31,9 @@ def album_constructor(album_data):
         print(f"KeyError: Missing key {e}")
         print("No albums found.")
 
+def sort_albums_by_title(albums):
+    return sorted(albums, key=lambda album: album.title)
+
 if __name__ == '__main__':
     test = {
       'albums': [
