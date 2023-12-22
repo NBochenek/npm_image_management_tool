@@ -42,8 +42,8 @@ def upload_media_process(token, folder_path, albums):
         try:
             counter += 1
             print("Select which album you want to upload these photos to:")
-            for album in albums:
-                print(f"{album.quid}", f"{album.title}")
+            for album in sort_albums_by_title(albums):
+                print(str(album.title + " --- " + str(album.quid)))
 
             album_selection = int(input("Enter the nunber of the album in the list above. Enter 0 to upload without an album:   \n\n\n"))
             for album in albums:
@@ -89,7 +89,7 @@ def main():
 
     #Main Function That Allows User Input
     print("\n\nAhoy! Welcome to the NPM Image Management Tool. This is your Captain speaking.\n"
-          "\nThis is a demo version! Please let Nick know about any weird happenings\n"
+          "\nPlease let Nick know about any weird happenings.\n"
           "\nFinally, please use at your own risk. Operations made by this app cannot be easily reversed.\n")
 
     while True:
